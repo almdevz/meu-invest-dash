@@ -3,45 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InvestDash Predictive v11.0</title>
+    <title>InvestDash Quantum v12.0</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #080b14; --card: #111827; --primary: #8b5cf6; --accent: #06b6d4;
-            --success: #10b981; --danger: #f43f5e; --text: #f9fafb; --sub: #9ca3af; --border: #1f2937;
+            --bg: #05070a; --card: #0f121d; --primary: #7c3aed; --accent: #2dd4bf;
+            --success: #10b981; --danger: #f43f5e; --text: #f1f5f9; --sub: #64748b; --border: #1e293b;
         }
-        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; transition: 0.2s; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
         .container { max-width: 1400px; margin: 0 auto; }
         
-        /* Glassmorphism Effect */
-        .glass-panel { background: rgba(17, 24, 39, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 24px; padding: 25px; margin-bottom: 20px; }
+        /* Header & Tools */
+        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; padding: 20px; background: var(--card); border-radius: 24px; border: 1px solid var(--border); }
+        .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 25px; }
         
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px; }
-        .box { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; position: relative; }
-        
-        /* AI Insights Header */
-        .ai-intelligence { background: linear-gradient(90deg, #4c1d95, #1e3a8a); border-radius: 20px; padding: 20px; margin-bottom: 20px; border-left: 6px solid var(--accent); }
-        .ai-badge { background: var(--accent); color: #000; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; margin-bottom: 10px; display: inline-block; }
+        .box { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 20px; }
+        .stat-main { font-size: 32px; font-weight: 800; display: block; margin: 10px 0; letter-spacing: -1px; }
+        .label { font-size: 11px; text-transform: uppercase; color: var(--sub); font-weight: 700; letter-spacing: 1px; }
 
-        .stat-val { font-size: 24px; font-weight: 800; display: block; margin-top: 5px; }
-        .stat-label { font-size: 12px; color: var(--sub); text-transform: uppercase; font-weight: 600; }
+        /* Magic Number & Snowball */
+        .magic-card { background: linear-gradient(135deg, #1e1b4b, #312e81); padding: 20px; border-radius: 20px; border: 1px solid var(--primary); }
+        .snowball-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
         /* Buttons */
-        .btn { padding: 12px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; transition: 0.3s; font-size: 13px; }
-        .btn-ai { background: var(--primary); color: white; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4); }
-        .btn-risk { background: rgba(244, 63, 94, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .btn { padding: 10px 18px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-p { background: var(--primary); color: white; }
+        .btn-s { background: #1e293b; color: white; border: 1px solid var(--border); }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; color: var(--sub); font-size: 11px; padding: 12px; border-bottom: 1px solid var(--border); }
-        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; color: var(--sub); font-size: 10px; padding: 12px; border-bottom: 1px solid var(--border); }
+        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; }
 
-        .progress-bar { height: 8px; background: #1f2937; border-radius: 4px; overflow: hidden; margin-top: 5px; }
-        .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: 1s ease; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+        .b-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .b-error { background: rgba(244, 63, 94, 0.1); color: var(--danger); }
         
-        .hidden { display: none; }
         .blur { filter: blur(8px); }
         input[type="file"] { display: none; }
     </style>
@@ -49,88 +48,71 @@
 <body>
 
 <div class="container">
-    <div class="glass-panel" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+    <div class="header">
         <div>
-            <h1 style="margin:0; font-size:24px;">InvestDash <span style="color:var(--accent)">Predictive AI</span></h1>
-            <p style="color:var(--sub); margin:5px 0 0; font-size:12px;">Versão 11.0 • Gestão Ativa de Risco</p>
+            <h1 style="margin:0; font-size: 26px;">InvestDash <span style="color:var(--primary)">Quantum v12</span></h1>
+            <p id="aiReport" style="color:var(--sub); margin:5px 0 0; font-size:13px;">Inicie a análise carregando seu arquivo.</p>
         </div>
         <div style="display:flex; gap:10px;">
-            <button onclick="togglePrivacy()" class="btn btn-risk" style="border:1px solid var(--sub); color:var(--text)">👁️ Privacidade</button>
-            <button onclick="simulateCrisis()" class="btn btn-risk">⚠️ Stress Test</button>
-            <label for="fIn" class="btn btn-ai">🔌 Importar Dados</label>
+            <button onclick="exportReport()" class="btn btn-s">📋 Relatório</button>
+            <button onclick="togglePrivacy()" class="btn btn-s">👁️ Ocultar</button>
+            <label for="fIn" class="btn btn-p">⚡ Importar Planilha</label>
             <input type="file" id="fIn" accept=".xlsx">
         </div>
     </div>
 
-    <div class="ai-intelligence" id="aiBox">
-        <span class="ai-badge">IA PREDICTIVE ENGINE</span>
-        <div id="aiText" style="font-size:14px; line-height:1.6;">Aguardando dados para realizar a análise preditiva da carteira...</div>
-    </div>
-
-    <div class="grid-3">
-        <div class="box">
-            <span class="stat-label">Património Total</span>
-            <span class="stat-val privacy" id="vPat">R$ 0,00</span>
-            <div class="progress-bar"><div id="pBar" class="progress-fill"></div></div>
-            <small id="pMeta" style="font-size:10px; color:var(--sub); margin-top:5px; display:block">Meta: R$ 100.000,00</small>
+    <div class="tool-grid">
+        <div class="box magic-card">
+            <span class="label" style="color:var(--accent)">🪄 Efeito Bola de Neve (Magic Number)</span>
+            <div id="magicList" style="margin-top:15px; font-size:13px;">
+                Aguardando dados...
+            </div>
         </div>
         <div class="box">
-            <span class="stat-label">Dividendos Estimados (Próx. Mês)</span>
-            <span class="stat-val privacy" id="vDivEst" style="color:var(--success)">R$ 0,00</span>
-            <small style="font-size:10px; color:var(--sub)">Baseado em sazonalidade histórica</small>
+            <span class="label">💰 Patrimônio Líquido</span>
+            <span class="stat-main privacy" id="vPat">R$ 0,00</span>
+            <div style="display:flex; justify-content:space-between; font-size:11px;">
+                <span id="vLucro" class="privacy" style="color:var(--success)">+ R$ 0,00</span>
+                <span id="vYield">YoC: 0.0%</span>
+            </div>
         </div>
         <div class="box">
-            <span class="stat-label">Índice de Diversificação</span>
-            <span class="stat-val" id="vDivScore">0%</span>
-            <small id="vDivText" style="font-size:10px; color:var(--sub)">Carregue dados para avaliar o risco</small>
+            <span class="label">📡 Score de Risco IA</span>
+            <span class="stat-main" id="vRisk">--</span>
+            <div id="vRiskDesc" style="font-size:11px; color:var(--sub)">Analisando correlação de ativos...</div>
         </div>
     </div>
 
-    <div class="grid-3" style="grid-template-columns: 2fr 1fr;">
-        <div class="box">
-            <h3 style="margin-top:0; font-size:16px;">Sugestão de Aporte IA (Rebalanceamento)</h3>
-            <table id="rebalanceTable">
+    <div class="tool-grid" style="grid-template-columns: 2fr 1fr;">
+        <div class="box" style="overflow-x:auto;">
+            <h3 style="margin:0 0 15px 0; font-size:16px;">Calculadora de Preço Teto & Dividendos</h3>
+            <table id="mainTable">
                 <thead>
                     <tr>
                         <th>Ativo</th>
-                        <th>Peso Atual</th>
-                        <th>Peso Alvo</th>
-                        <th>Sugestão IA</th>
+                        <th>Cotação</th>
+                        <th>Preço Teto</th>
+                        <th>Margem</th>
+                        <th>Status IA</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             </table>
         </div>
         <div class="box">
-            <h3 style="margin-top:0; font-size:16px;">Risco por Setor</h3>
-            <canvas id="cRisk" height="200"></canvas>
+            <h3 style="margin:0 0 15px 0; font-size:16px;">Concentração Setorial</h3>
+            <canvas id="cSetor" height="250"></canvas>
         </div>
-    </div>
-
-    <div class="box" style="overflow-x:auto;">
-        <h3 style="margin-top:0; font-size:16px;">Monitor de Ativos</h3>
-        <table id="mainTable">
-            <thead>
-                <tr>
-                    <th>Ativo</th>
-                    <th>Preço Médio</th>
-                    <th>Cotação</th>
-                    <th>Preço Teto IA</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
     </div>
 </div>
 
 <script>
     let db = {}; let charts = {};
-    const fmt = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+    const brl = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
     window.onload = () => {
-        const saved = localStorage.getItem('investDash_v11');
-        if(saved) { db = JSON.parse(saved); runAI(); }
+        const saved = localStorage.getItem('investDash_v12');
+        if(saved) { db = JSON.parse(saved); analyze(); }
     };
 
     document.getElementById('fIn').addEventListener('change', e => {
@@ -141,83 +123,77 @@
                 c: XLSX.utils.sheet_to_json(wb.Sheets["CARTEIRA"]),
                 d: XLSX.utils.sheet_to_json(wb.Sheets["DIVIDENDOS"])
             };
-            localStorage.setItem('investDash_v11', JSON.stringify(db));
-            runAI();
+            localStorage.setItem('investDash_v12', JSON.stringify(db));
+            analyze();
         };
         reader.readAsBinaryString(e.target.files[0]);
     });
 
-    function runAI() {
+    function analyze() {
         if(!db.c) return;
         const cart = db.c.filter(i => i.ATIVO);
-        const total = cart.reduce((a,b) => a + (parseFloat(b['CART. ATUAL'])||0), 0);
+        const totalPat = cart.reduce((a,b) => a + (parseFloat(b['CART. ATUAL'])||0), 0);
+        const totalInv = cart.reduce((a,b) => a + (parseFloat(b['CUSTO TOTAL'])||0), 0);
         const totalDiv = db.d.reduce((a,b) => a + (parseFloat(b.Valor)||0), 0);
-        
-        // 1. Meta & KPIs
-        document.getElementById('vPat').innerText = fmt(total);
-        const pMeta = Math.min(100, (total / 100000) * 100);
-        document.getElementById('pBar').style.width = pMeta + "%";
-        document.getElementById('metaPct')?.innerText || (document.getElementById('pMeta').innerText = `Meta: R$ 100.000,00 (${pMeta.toFixed(1)}%)`);
 
-        // 2. IA: Estimativa Próximo Mês
-        const lastMonth = db.d.slice(-10).reduce((a,b) => a + (parseFloat(b.Valor)||0), 0) / 10;
-        document.getElementById('vDivEst').innerText = fmt(lastMonth * 1.05); // IA simula 5% de crescimento
+        // KPIs
+        document.getElementById('vPat').innerText = brl(totalPat);
+        document.getElementById('vLucro').innerText = "+ " + brl((totalPat - totalInv) + totalDiv);
+        document.getElementById('vYield').innerText = "YoC: " + ((totalDiv/(totalInv||1))*100).toFixed(2) + "%";
 
-        // 3. IA: Score de Diversificação
-        const setores = [...new Set(cart.map(i => i.SEGMENTO))].length;
-        const score = Math.min(100, (setores * 15));
-        document.getElementById('vDivScore').innerText = score + "%";
-        document.getElementById('vDivText').innerText = score > 70 ? "Excelente diversificação" : "Risco de concentração alto";
+        // IA: Score de Risco (Baseado em concentração)
+        const maxSetor = {}; cart.forEach(c => maxSetor[c.SEGMENTO] = (maxSetor[c.SEGMENTO] || 0) + (c['CART. ATUAL']/totalPat));
+        const riskScore = (Math.max(...Object.values(maxSetor)) * 100).toFixed(0);
+        document.getElementById('vRisk').innerText = riskScore > 40 ? "ALTO" : "BAIXO";
+        document.getElementById('vRiskDesc').innerText = riskScore > 40 ? "⚠️ Muita concentração em um só setor." : "✅ Carteira bem diversificada.";
 
-        // 4. IA: Insights de Texto
-        const melhor = cart.sort((a,b) => b['VARIAÇÃO %'] - a['VARIAÇÃO %'])[0];
-        document.getElementById('aiText').innerHTML = `<b>Diagnóstico:</b> A sua carteira está com ${setores} setores ativos. O ativo <b>${melhor.ATIVO}</b> é o seu maior destaque positivo. 
-        <b>Ação Sugerida:</b> O rebalanceador indica que você deve focar os próximos aportes em setores de menor peso para reduzir a volatilidade.`;
-
-        renderTables(cart, total);
+        // Magic Number & Relatório
+        updateMagicNumber(cart);
+        renderTable(cart);
         renderCharts(cart);
+        
+        document.getElementById('aiReport').innerText = `🤖 IA: Você possui ${cart.length} ativos. Seu melhor rendimento é ${cart.sort((a,b)=>b.DIVIDENDOS-a.DIVIDENDOS)[0].ATIVO}.`;
     }
 
-    function renderTables(cart, total) {
-        const tbMain = document.querySelector('#mainTable tbody');
-        const tbReb = document.querySelector('#rebalanceTable tbody');
-        tbMain.innerHTML = ''; tbReb.innerHTML = '';
+    function updateMagicNumber(cart) {
+        const list = document.getElementById('magicList');
+        list.innerHTML = '';
+        cart.slice(0, 4).forEach(at => {
+            const divMensal = (parseFloat(at.DIVIDENDOS) / 12) || 0;
+            const cot = parseFloat(at['COTAÇÃO ATUAL']) || 1;
+            const progress = (divMensal / cot) * 100;
+            list.innerHTML += `
+                <div class="snowball-item">
+                    <span>${at.ATIVO}</span>
+                    <span style="color:var(--accent)">${progress >= 100 ? '✅ 1+ Cota/mês' : progress.toFixed(1)+'% para 1 cota'}</span>
+                </div>`;
+        });
+    }
 
-        const idealWeight = 1 / cart.length;
-
+    function renderTable(cart) {
+        const tb = document.querySelector('#mainTable tbody');
+        tb.innerHTML = '';
         cart.forEach(at => {
-            const currentWeight = (parseFloat(at['CART. ATUAL']) || 0) / total;
-            const needsAporte = currentWeight < idealWeight;
-            const teto = (parseFloat(at.DIVIDENDOS)/at['QTDE ATUAL'])/0.06 || 0;
             const cot = parseFloat(at['COTAÇÃO ATUAL']) || 0;
-
-            // Tabela Principal
-            tbMain.innerHTML += `<tr>
-                <td><b>${at.ATIVO}</b></td>
-                <td class="privacy">${fmt(at['PREÇO MÉDIO'])}</td>
-                <td class="privacy">${fmt(cot)}</td>
-                <td class="privacy">${fmt(teto)}</td>
-                <td><span style="color:${cot < teto ? 'var(--success)' : 'var(--sub)'}">${cot < teto ? '🔥 COMPRA' : 'HOLD'}</span></td>
+            const teto = (parseFloat(at.DIVIDENDOS)/at['QTDE ATUAL'])/0.06 || 0;
+            const margem = teto > 0 ? ((teto/cot - 1)*100).toFixed(1) : 0;
+            
+            tb.innerHTML += `<tr>
+                <td>${at.ATIVO}</td>
+                <td class="privacy">${brl(cot)}</td>
+                <td class="privacy">${brl(teto)}</td>
+                <td style="color:${margem > 0 ? 'var(--success)' : 'var(--danger)'}">${margem}%</td>
+                <td><span class="badge ${margem > 10 ? 'b-success' : 'b-error'}">${margem > 10 ? 'FORTE COMPRA' : 'HOLD'}</span></td>
             </tr>`;
-
-            // Tabela Rebalanceamento
-            if(needsAporte) {
-                tbReb.innerHTML += `<tr>
-                    <td>${at.ATIVO}</td>
-                    <td>${(currentWeight*100).toFixed(1)}%</td>
-                    <td>${(idealWeight*100).toFixed(1)}%</td>
-                    <td style="color:var(--accent)">ADICIONAR</td>
-                </tr>`;
-            }
         });
     }
 
     function renderCharts(cart) {
         const s = {}; cart.forEach(c => s[c.SEGMENTO] = (s[c.SEGMENTO] || 0) + (parseFloat(c['CART. ATUAL'])||0));
-        if(charts.r) charts.r.destroy();
-        charts.r = new Chart(document.getElementById('cRisk'), {
-            type: 'doughnut',
-            data: { labels: Object.keys(s), datasets: [{ data: Object.values(s), backgroundColor: ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#f43f5e'], borderWidth: 0 }] },
+        if(charts.s) charts.s.destroy();
+        charts.s = new Chart(document.getElementById('cSetor'), {
+            type: 'polarArea',
+            data: { labels: Object.keys(s), datasets: [{ data: Object.values(s), backgroundColor: ['#7c3aed', '#2dd4bf', '#10b981', '#f59e0b', '#f43f5e'] }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
     }
@@ -226,18 +202,11 @@
         document.querySelectorAll('.privacy').forEach(el => el.classList.toggle('blur'));
     }
 
-    function simulateCrisis() {
-        if(!confirm("Simular queda de 20% no mercado (Stress Test)?")) return;
-        const val = document.getElementById('vPat');
-        const original = val.innerText;
-        const current = parseFloat(original.replace(/[^\d,]/g, '').replace(',', '.'));
-        val.innerText = fmt(current * 0.8);
-        val.style.color = "var(--danger)";
-        setTimeout(() => { 
-            alert("Este seria o seu património numa crise. Mantenha a calma e os dividendos continuarão caindo!");
-            val.innerText = original;
-            val.style.color = "var(--text)";
-        }, 3000);
+    function exportReport() {
+        const pat = document.getElementById('vPat').innerText;
+        const texto = `📊 RELATÓRIO DE INVESTIMENTOS\nPatrimônio: ${pat}\nStatus: ${document.getElementById('vRiskDesc').innerText}\n\nGerado por InvestDash Quantum.`;
+        navigator.clipboard.writeText(texto);
+        alert("Relatório copiado para a área de transferência!");
     }
 </script>
 </body>
