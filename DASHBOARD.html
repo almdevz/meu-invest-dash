@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvestDash Master v6.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc; --card: #ffffff; --primary: #4318ff; --success: #01b574;
+            --danger: #ee5d50; --text-main: #1b2559; --text-sub: #a3aed0; --border: #e2e8f0;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #0b1437; --card: #111c44; --text-main: #ffffff; --border: #1b254b; }
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text-main); padding: 15px; transition: 0.3s; }
+        .container { max-width: 1600px; margin: 0 auto; }
+
+        /* Header & Filters */
+        .header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 15px; }
+        .actions { display: flex; gap: 10px; align-items: center; }
+        select, .btn { padding: 12px 20px; border-radius: 14px; border: 1px solid var(--border); background: var(--card); color: var(--text-main); font-weight: 700; cursor: pointer; font-family: inherit; }
+        .btn-primary { background: var(--primary); color: white; border: none; }
+
+        /* KPI Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: var(--card); padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .stat-card span { color: var(--text-sub); font-size: 13px; font-weight: 700; text-transform: uppercase; }
+        .stat-card h2 { font-size: 28px; margin-top: 10px; font-weight: 800; }
+
+        /* Main Charts Layout */
+        .layout-grid { display: grid; grid-template-columns: 1fr; gap: 25px; margin-bottom: 25px; }
+        @media(min-width: 1024px) { .layout-grid { grid-template-columns: 2fr 1fr; } }
+        .box { background: var(--card); padding: 25px; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+
+        /* Table Design */
+        .table-box { background: var(--card); padding: 25px; border-radius: 24px; border: 1px solid var(--border); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        th { text-align: left; padding: 15px; color: var(--text-sub); font-size: 12px; font-weight: 800; border-bottom: 2px solid var(--bg); }
+        td { padding: 18px; border-bottom: 1px solid var(--bg); font-size: 14px; font-weight: 600; }
+
+        .badge { padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 800; }
+        .b-buy { background: rgba(1, 181, 116, 0.1); color: var(--success); }
+        .b-hold { background: rgba(163, 174, 208, 0.1); color: var(--text-sub); }
+        .b-danger { background: rgba(238, 93, 80, 0.1); color: var(--danger); }
+
+        #fileInput { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h1 style="font-size: 32px;">InvestDash <span style="color:var(--primary)">Master v6.0</span></h1>
+            <p id="status" style="color:var(--text-sub); font-weight:600">Conecte sua base de dados</p>
+        </div>
+        <div class="actions">
+            <select id="tipoFiltro" onchange="processData()">
+                <option value="TODOS">Visão Consolidada</option>
+                <option value="ACAO">Ações (Equity)</option>
+                <option value="FII">FIIs (Imobiliário)</option>
+            </select>
+            <label for="fileInput" class="btn btn-primary">Atualizar Planilha XLSX</label>
+            <input type="file" id="fileInput" accept=".xlsx">
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card"><span>Patrimônio Total</span><h2 id="vPat">R$ 0,00</h2></div>
+        <div class="stat-card"><span>Renda Passiva Histórica</span><h2 id="vDiv" style="color:var(--success)">R$ 0,00</h2></div>
+        <div class="stat-card"><span>Yield on Cost Médio</span><h2 id="vYoC">0,00%</h2></div>
+        <div class="stat-card"><span>Ponto de Equilíbrio (Mês)</span><h2 id="vEqui" style="color:var(--primary)">R$ 0,00</h2></div>
+    </div>
+
+    <div class="layout-grid">
+        <div class="box">
+            <h3 style="margin-bottom:20px">Projeção de Renda vs. Custo Investido</h3>
+            <canvas id="chartLine" height="300"></canvas>
+        </div>
+        <div class="box">
+            <h3 style="margin-bottom:20px">Alocação por Setor</h3>
+            <canvas id="chartDoughnut" height="300"></canvas>
+        </div>
+    </div>
+
+    <div class="table-box">
+        <h3 style="margin-bottom:20px">Inteligência de Ativos e Preço Teto</h3>
+        <table id="tableAtivos">
+            <thead>
+                <tr>
+                    <th>Ativo</th>
+                    <th>Preço Médio</th>
+                    <th>Cotação</th>
+                    <th>Margem Seg.</th>
+                    <th>Yield (PM)</th>
+                    <th>Ef. Bola de Neve</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let db = {}; let charts = {};
+    const money = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+
+    document.getElementById('fileInput').addEventListener('change', e => {
+        const reader = new FileReader();
+        reader.onload = evt => {
+            const wb = XLSX.read(evt.target.result, {type: 'binary'});
+            db = {
+                cart: XLSX.utils.sheet_to_json(wb.Sheets["CARTEIRA"]),
+                div: XLSX.utils.sheet_to_json(wb.Sheets["DIVIDENDOS"]),
+                apo: XLSX.utils.sheet_to_json(wb.Sheets["APORTE"]),
+                ope: XLSX.utils.sheet_to_json(wb.Sheets["OPERAÇÕES"])
+            };
+            processData();
+        };
+        reader.readAsBinaryString(e.target.files[0]);
+    });
+
+    function processData() {
+        if (!db.cart) return;
+        const filtro = document.getElementById('tipoFiltro').value;
+        const carteira = db.cart.filter(i => i.ATIVO && (filtro === 'TODOS' || i.TIPO === filtro));
+        
+        // Cálculos Base
+        const pat = carteira.reduce((a, b) => a + (parseFloat(b['CART. ATUAL']) || 0), 0);
+        const inv = carteira.reduce((a, b) => a + (parseFloat(b['CUSTO TOTAL']) || 0), 0);
+        const prov = db.div.filter(d => carteira.some(c => c.ATIVO === d.ATIVO)).reduce((a, b) => a + (parseFloat(b.Valor) || 0), 0);
+        const meses = [...new Set(db.div.map(d => d.MÊS))].length || 1;
+
+        // Update KPIs
+        document.getElementById('vPat').innerText = money(pat);
+        document.getElementById('vDiv').innerText = money(prov);
+        document.getElementById('vYoC').innerText = ((prov / (inv || 1)) * 100).toFixed(2) + '%';
+        document.getElementById('vEqui').innerText = money(prov / meses);
+
+        renderTable(carteira);
+        renderCharts(inv, pat, carteira);
+        document.getElementById('status').innerText = "Análise Elite Ativa • " + new Date().toLocaleTimeString();
+    }
+
+    function renderTable(data) {
+        const body = document.querySelector('#tableAtivos tbody');
+        body.innerHTML = '';
+        data.forEach(at => {
+            const pm = parseFloat(at['PREÇO MÉDIO']) || 0;
+            const cot = parseFloat(at['COTAÇÃO ATUAL']) || 0;
+            const yoc = (pm > 0) ? ((parseFloat(at.DIVIDENDOS) / (pm * at['QTDE ATUAL'])) * 100).toFixed(2) : 0;
+            const margem = pm > 0 ? ((cot / pm - 1) * 100).toFixed(1) : 0;
+            
+            // Lógica Bola de Neve (Rendimento mensal cobre 1 cota)
+            const rendMensal = (parseFloat(at.DIVIDENDOS) / 12) || 0;
+            const snowball = rendMensal >= cot;
+
+            body.innerHTML += `
+                <tr>
+                    <td><b>${at.ATIVO}</b><br><small style="color:var(--text-sub)">${at.SEGMENTO}</small></td>
+                    <td>${money(pm)}</td>
+                    <td>${money(cot)}</td>
+                    <td style="color:${margem < 0 ? 'var(--success)' : 'var(--danger)'}">${margem}%</td>
+                    <td>${yoc}%</td>
+                    <td><span class="badge ${snowball ? 'b-buy' : 'b-hold'}">${snowball ? 'SIM (1+ Cota)' : 'Não'}</span></td>
+                    <td><span class="badge ${margem < 0 ? 'b-buy' : 'b-danger'}">${margem < 0 ? 'COMPRAR' : 'AGUARDAR'}</span></td>
+                </tr>
+            `;
+        });
+    }
+
+    function renderCharts(inv, pat, cart) {
+        if(charts.l) charts.l.destroy();
+        charts.l = new Chart(document.getElementById('chartLine'), {
+            type: 'line',
+            data: {
+                labels: ['Início', 'Hoje'],
+                datasets: [
+                    { label: 'Custo Total', data: [0, inv], borderColor: '#a3aed0', borderDash: [5,5], fill: false },
+                    { label: 'Patrimônio', data: [0, pat], borderColor: '#4318ff', backgroundColor: 'rgba(67, 24, 255, 0.1)', fill: true, tension: 0.4 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        const sets = {}; cart.forEach(c => sets[c.SEGMENTO] = (sets[c.SEGMENTO] || 0) + c['CART. ATUAL']);
+        if(charts.d) charts.d.destroy();
+        charts.d = new Chart(document.getElementById('chartDoughnut'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(sets),
+                datasets: [{ data: Object.values(sets), backgroundColor: ['#4318ff', '#0ea5e9', '#10b981', '#f59e0b', '#ee5d50', '#7551ff'], borderWidth: 0 }]
+            },
+            options: { cutout: '80%', responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+</script>
+</body>
+</html>
